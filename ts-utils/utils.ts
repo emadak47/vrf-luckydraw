@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import CandidateAddressJson from "./CandidateAddress.json";
 
-const candidateArray = () => {
+const candidatesArray = () => {
   return CandidateAddressJson;
 }
 
@@ -14,7 +14,7 @@ const getTestUsers = async () => {
 }
 
 export default {
-  candidateArray,
+  candidatesArray,
   toWei,
   toEth,
   getTestUsers

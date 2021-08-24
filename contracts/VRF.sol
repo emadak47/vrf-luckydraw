@@ -1,10 +1,10 @@
-//SPDX-License-Identifier: Unlicense
+//SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.6;
 
 import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
-import "./SafeMath.sol";
-import "./Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract VRF is VRFConsumerBase, Ownable {
 
@@ -12,89 +12,107 @@ contract VRF is VRFConsumerBase, Ownable {
 
     bytes32 public keyHash;
     uint256 public fee;
-    uint32 public NoOfCandidates;
-    uint32 public NoOfWinners;
 
-    address[] public candidate;
-    address[] public Winners;
+    /// @dev expected number of candidates 
+    uint32 public candidatesNumber;
+
+    /// @dev number of winners 
+    uint32 public winnersNumber;
+
+    /// @dev an array to contain 'candidatesNumber' addresses 
+    address[] public candidates;
+
+    /// @dev an array to be filled in with 'winnersNumber' addresses
+    address[] public winners;
+
+    /// @dev mapping to indicate which addresses have been added to winners
     mapping (address => bool) selected;
 
-    event vrfRequested(bytes32 indexed VRFRequestID);
-    event randomNumberrequested(address someone);
-    event randomNumberReceived(uint256 indexed randomness);
+    event RandomNumberRequested(bytes32 indexed vrfRequestID);
+    event RandomNumberReceived(bytes32 indexed requestId, uint256 indexed randomness);
 
     constructor(
-        address _VRFCoordinator, 
-        address _LINK, 
+        address _vrfCoordinator, 
+        address _link, 
         bytes32 _keyHash, 
         uint256 _fee
-    ) public VRFConsumerBase(_VRFCoordinator, _LINK) {
+    ) public VRFConsumerBase(_vrfCoordinator, _link) {
         keyHash = _keyHash;
         fee = _fee;
     }
 
-    function setNoOfCandidates(uint32 _NoOfCandidates) public {
-        NoOfCandidates = _NoOfCandidates;
+    function setCandidatesNumber(uint32 _candidatesNumbers) public {
+        candidatesNumber = _candidatesNumbers;
     }
 
-    function setNoOfWinners(uint32 _NoOfWinners) public {
-        NoOfWinners = _NoOfWinners;
+    function setWinnersNumber(uint32 _winnersNumber) public {
+        winnersNumber = _winnersNumber;
     }
 
-    function setCandidateInfo(address[] memory _candidate) public onlyOwner {
-        require (NoOfCandidates == _candidate.length, "Number of entries in the array _candidate doesn't match the NoOfCandidates");
-        candidate = _candidate;  
-        for (uint i = 0; i < candidate.length; i++) {
-            selected[candidate[i]] = false;
+    /** 
+     * @notice instantiate the 'candidates' array and the mapping 'selected'
+     * @dev number of entries in _candidates must match the set number of candidates in 'candidatesNumber' 
+     */
+    function setCandidatesInfo(address[] memory _candidates) public onlyOwner {
+        require (candidatesNumber == _candidates.length, "Number of entries in _candidates doesn't match the candidatesNumber");
+        candidates = _candidates;  
+        for (uint i = 0; i < candidates.length; i++) {
+            selected[candidates[i]] = false;
         }
     }
-
+    
     function requestRandomNumber() public {
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK in contract");
-        bytes32 VRFRequestID = requestRandomness(keyHash, fee);
-        emit vrfRequested(VRFRequestID);
+        bytes32 vrfRequestID = requestRandomness(keyHash, fee);
+        emit RandomNumberRequested(vrfRequestID);
     }
 
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         generateWinners(randomness);
-        emit randomNumberReceived(randomness); 
+        emit RandomNumberReceived(requestId, randomness); 
     }
 
+    /**
+     * @notice generate 2x expected number of winners. Only consider the first 'winnersNumber' who have not been selected
+     * @dev getting multiple random numbers within a given range from a single VRF response
+     */
     function generateWinners(uint256 randomness) public {
         uint counter = 0;
-        for (uint i = 0; i < SafeMath.mul(NoOfWinners, 2); i++) {
-            
+        uint width = SafeMath.mul(winnersNumber, 2);
+
+        for (uint i = 0; i < width; i++) {
+            // range (0, candidatesNumber)
             uint256 randomNumber = SafeMath.mod(
                 uint256(keccak256(abi.encode(randomness, i))),
-                NoOfCandidates
+                candidatesNumber
             );
 
-            if(!selected[candidate[randomNumber]]) {
-                selected[candidate[randomNumber]] = true;
-                Winners.push(candidate[randomNumber]);
+            if(!selected[candidates[randomNumber]]) {
+                selected[candidates[randomNumber]] = true;
+                winners.push(candidates[randomNumber]);
                 counter = SafeMath.add(counter, 1);
             } 
 
-            if (counter == NoOfWinners) break;
+            if (counter == winnersNumber) break;
         }
     }
 
-    function getNoOfCandidates() public view returns(uint32) {
-        return NoOfCandidates;
+    function getCandidatesNumber() public view returns(uint32) {
+        return candidatesNumber;
     }
 
-    function getNoOfWinners() public view returns(uint32) {
-        return NoOfWinners;
+    function getWinnersNumber() public view returns(uint32) {
+        return winnersNumber;
     }
 
-    function getWinnersList() public view returns(address[] memory) {
-        return Winners;
+    function getWinners() public view returns(address[] memory) {
+        return winners;
     }
     
     function getCandidateInfo(uint32 id) public view returns(address candidateAddressValue, bool selectedValue) {
         return(
-            candidate[id],
-            selected[candidate[id]]
+            candidates[id],
+            selected[candidates[id]]
         );
     }
     
@@ -104,5 +122,10 @@ contract VRF is VRFConsumerBase, Ownable {
 
     function getRequestFee() external view returns(uint256) {
         return fee;
+    }
+
+    /// @notice to avoid locking funds within the contract
+    function withdrawLink() external onlyOwner {
+        require(LINK.transfer(msg.sender, LINK.balanceOf(address(this))), "Unable to transfer funds out of contract");
     }
 }

@@ -11,7 +11,7 @@ const {
 
 import utils from '../ts-utils/utils';
 const {
-    candidateArray,
+    candidatesArray,
     toWei,
     toEth,
     getTestUsers
@@ -23,14 +23,14 @@ describe('VRF contract', function() {
     // Constructor parameters 
     let _fee, _keyHash, _vrfCoordinator, _link;
     // Input parameters
-    let _candidate;
+    let _candidates;
 
     beforeEach(async() => {
         _fee = fee["Kovan"];
         _link = link["Kovan"];
         _keyHash = keyHash["Kovan"];
         _vrfCoordinator = vrfCoordinator["Kovan"];
-        _candidate = candidateArray();
+        _candidates = candidatesArray();
 
         token = await ethers.getContractFactory("VRF");
         users = await getTestUsers();
@@ -63,34 +63,34 @@ describe('VRF contract', function() {
     });
 
     // COMPLETE
-    describe('2. setCandidatesArray', () => {
+    describe('2. setCandidatesInfo', () => {
         it('2.1 Should only allow the owner to modify it', async () => {
-            await vrfContract.setNoOfCandidates(_candidate.length);
+            await vrfContract.setCandidatesNumber(_candidates.length);
             await expect(vrfContract.connect(users.stranger)
-            .setCandidateInfo(_candidate)).to.be.revertedWith("Has to be owner");
+            .setCandidatesInfo(_candidates)).to.be.revertedWith("Ownable: caller is not the owner");
         });
 
-        it('2.2 Should revert if No. of entries in _candidates is different from _NoOfCandidates passed to Constructor', async () => {
-            await vrfContract.setNoOfCandidates(_candidate.length - 1);
+        it('2.2 Should revert if No. of entries in _candidates is different from _candidatesNumber passed to Constructor', async () => {
+            await vrfContract.setCandidatesNumber(_candidates.length - 1);
 
-            await expect(vrfContract.setCandidateInfo(_candidate))
-            .to.be.revertedWith("Number of entries in the array _candidate doesn't match the NoOfCandidates");
+            await expect(vrfContract.setCandidatesInfo(_candidates))
+            .to.be.revertedWith("Number of entries in _candidates doesn't match the candidatesNumber");
         });
     });
 
     // COMPLETE
     describe('3. generateWinners', () => {
         it('3.1 Should select the required No. of winners', async () => {
-            await vrfContract.setNoOfCandidates(_candidate.length);
-            await vrfContract.setCandidateInfo(_candidate);
+            await vrfContract.setCandidatesNumber(_candidates.length);
+            await vrfContract.setCandidatesInfo(_candidates);
 
-            await vrfContract.setNoOfWinners(10);
+            await vrfContract.setWinnersNumber(10);
             
-            // To mimic the behaviour of randomness
+            // To mimic the behaviour of 'randomness'
             const random = Math.floor(Math.random() * (100000000000000));
             await vrfContract.generateWinners(random);
 
-            const result = await vrfContract.getWinnersList();
+            const result = await vrfContract.getWinners(); 
             expect(result.length).to.equal(10);
         });
     })
@@ -98,27 +98,27 @@ describe('VRF contract', function() {
     // COMPLETE
     describe('4. getCandidateInfo', () => {
         it('4.1 Should check if array and map are set correctly', async () => {
-            await vrfContract.setNoOfCandidates(_candidate.length);
-            await vrfContract.setCandidateInfo(_candidate);
+            await vrfContract.setCandidatesNumber(_candidates.length);
+            await vrfContract.setCandidatesInfo(_candidates);
             
-            const random = Math.floor(Math.random() * (_candidate.length));
+            const random = Math.floor(Math.random() * (_candidates.length));
             const result = await vrfContract.getCandidateInfo(random); 
 
-            expect(result.candidateAddressValue).to.equal(_candidate[random]);
+            expect(result.candidateAddressValue).to.equal(_candidates[random]);
             expect(result.selectedValue).to.equal(false);
         });
     });
     
     // COMPLETE
     describe('5. getLINKAddress()', () => {
-        it('6.1 Should return the address of LINK token', async () => {
+        it('5.1 Should return the address of LINK token', async () => {
             expect(await vrfContract.getLINKAddress()).to.equal(_link);
         });
     });
 
     // COMPLETE 
     describe('6. getRequestFee()', () => {
-        it('7.1 Should return the corresponding fee for the request', async () => {
+        it('6.1 Should return the corresponding fee for the request', async () => {
             expect(await vrfContract.getRequestFee()).to.equal(_fee);
         })
     });
