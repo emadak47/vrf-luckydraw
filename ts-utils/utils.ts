@@ -1,5 +1,6 @@
-import { ethers } from "hardhat";
+import {ethers} from "hardhat";
 import CandidateAddressJson from "./CandidateAddress.json";
+import {getTestUsers} from "../test/utils";
 
 const candidatesArray = () => {
   return CandidateAddressJson;
@@ -7,11 +8,6 @@ const candidatesArray = () => {
 
 const toWei = ethers.utils.parseEther;
 const toEth = ethers.utils.formatEther;
-
-const getTestUsers = async () => {
-    let [deployer, vrfCoordinator, user1, user2, stranger] = await ethers.getSigners();
-    return {deployer, vrfCoordinator, user1, user2, stranger};
-}
 
 export default {
   candidatesArray,
