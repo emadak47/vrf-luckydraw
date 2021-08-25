@@ -26,10 +26,10 @@ describe('VRF contract', function() {
     let _candidates;
 
     beforeEach(async() => {
-        _fee = fee["Kovan"];
-        _link = link["Kovan"];
-        _keyHash = keyHash["Kovan"];
-        _vrfCoordinator = vrfCoordinator["Kovan"];
+        _fee = fee["kovan"];
+        _link = link["kovan"];
+        _keyHash = keyHash["kovan"];
+        _vrfCoordinator = vrfCoordinator["kovan"];
         _candidates = candidatesArray();
 
         token = await ethers.getContractFactory("VRF");
@@ -44,7 +44,7 @@ describe('VRF contract', function() {
     });
 
     // COMPLETE
-    describe('1. Check const values of the Network Kovan', () => {
+    describe('1. Check const values of the Network kovan', () => {
         it('1.1 Should return a correct value for fee', () => {
             expect(_fee).to.equal(toWei('0.1'));
         });

@@ -20,10 +20,10 @@ async function main() {
       users.deployer.address
     );
 
-    const feeValue = fee["Kovan"];
-    const keyHashValue = keyHash["Kovan"];
-    const vrfCoordinatorValue = vrfCoordinator["Kovan"];
-    const linkValue = link["Kovan"];
+    const feeValue = fee["kovan"];
+    const keyHashValue = keyHash["kovan"];
+    const vrfCoordinatorValue = vrfCoordinator["kovan"];
+    const linkValue = link["kovan"];
     
     console.log("Account balance:", (await users.deployer.getBalance()).toString());
       
