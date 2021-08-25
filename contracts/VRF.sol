@@ -41,10 +41,6 @@ contract VRF is VRFConsumerBase, Ownable {
         fee = _fee;
     }
 
-    function setCandidatesNumber(uint32 _candidatesNumbers) public {
-        candidatesNumber = _candidatesNumbers;
-    }
-
     function setWinnersNumber(uint32 _winnersNumber) public {
         winnersNumber = _winnersNumber;
     }
@@ -54,8 +50,8 @@ contract VRF is VRFConsumerBase, Ownable {
      * @dev number of entries in _candidates must match the set number of candidates in 'candidatesNumber' 
      */
     function setCandidatesInfo(address[] memory _candidates) public onlyOwner {
-        require (candidatesNumber == _candidates.length, "Number of entries in _candidates doesn't match the candidatesNumber");
-        candidates = _candidates;  
+        candidatesNumber = uint32(_candidates.length);
+        candidates = _candidates;
         for (uint i = 0; i < candidates.length; i++) {
             selected[candidates[i]] = false;
         }

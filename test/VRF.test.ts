@@ -65,25 +65,17 @@ describe('VRF contract', function() {
     // COMPLETE
     describe('2. setCandidatesInfo', () => {
         it('2.1 Should only allow the owner to modify it', async () => {
-            await vrfContract.setCandidatesNumber(_candidates.length);
             await expect(vrfContract.connect(users.stranger)
             .setCandidatesInfo(_candidates)).to.be.revertedWith("Ownable: caller is not the owner");
         });
 
-        it('2.2 Should revert if No. of entries in _candidates is different from _candidatesNumber passed to Constructor', async () => {
-            await vrfContract.setCandidatesNumber(_candidates.length - 1);
-
-            await expect(vrfContract.setCandidatesInfo(_candidates))
-            .to.be.revertedWith("Number of entries in _candidates doesn't match the candidatesNumber");
-        });
     });
 
     // COMPLETE
     describe('3. generateWinners', () => {
         it('3.1 Should select the required No. of winners', async () => {
-            await vrfContract.setCandidatesNumber(_candidates.length);
             await vrfContract.setCandidatesInfo(_candidates);
-
+            expect(await vrfContract.getCandidatesNumber()).to.equal(_candidates.length);
             await vrfContract.setWinnersNumber(10);
             
             // To mimic the behaviour of 'randomness'
@@ -98,9 +90,9 @@ describe('VRF contract', function() {
     // COMPLETE
     describe('4. getCandidateInfo', () => {
         it('4.1 Should check if array and map are set correctly', async () => {
-            await vrfContract.setCandidatesNumber(_candidates.length);
             await vrfContract.setCandidatesInfo(_candidates);
-            
+            expect(await vrfContract.getCandidatesNumber()).to.equal(_candidates.length);
+
             const random = Math.floor(Math.random() * (_candidates.length));
             const result = await vrfContract.getCandidateInfo(random); 
 
