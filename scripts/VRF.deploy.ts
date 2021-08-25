@@ -1,20 +1,42 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
+
+import vrfConfig from '../ts-utils/vrf.config';
+const {
+    keyHash,
+    fee,
+    vrfCoordinator,
+    link,
+} = vrfConfig;
+
+import utils from '../ts-utils/utils';
+const { getTestUsers } = utils;
 
 async function main() {
 
-    const [deployer] = await ethers.getSigners();
+    const users = await getTestUsers();
   
     console.log(
       "Deploying contracts with the account:",
-      deployer.address
+      users.deployer.address
     );
+
+    const feeValue = fee["Kovan"];
+    const keyHashValue = keyHash["Kovan"];
+    const vrfCoordinatorValue = vrfCoordinator["Kovan"];
+    const linkValue = link["Kovan"];
     
-    console.log("Account balance:", (await deployer.getBalance()).toString());
+    console.log("Account balance:", (await users.deployer.getBalance()).toString());
+      
+    const token = await ethers.getContractFactory("VRF");
+    const vrfContract = await token.deploy(
+      vrfCoordinatorValue, 
+      linkValue, 
+      keyHashValue,
+      feeValue,
+    );
+    await vrfContract.deployed();
   
-    const Token = await ethers.getContractFactory("Token");
-    const token = await Token.deploy();
-  
-    console.log("Token address:", token.address);
+    console.log("vrfContract address:", vrfContract.address);
   }
   
   main()

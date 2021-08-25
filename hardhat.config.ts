@@ -17,6 +17,12 @@ const config: HardhatUserConfig = {
       }
     ],
   },
+  networks: {
+    kovan: {
+      url: , // infura or alchemy node url 
+      accounts: [] // private key 
+    }
+  }
 };
 
 export default config;
