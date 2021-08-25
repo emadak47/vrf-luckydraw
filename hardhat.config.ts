@@ -19,7 +19,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     kovan: {
-      url: , // infura or alchemy node url 
+      url: "", // infura or alchemy node url
       accounts: [] // private key 
     }
   }
