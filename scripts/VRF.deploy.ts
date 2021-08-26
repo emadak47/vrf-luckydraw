@@ -13,35 +13,35 @@ const { getTestUsers } = utils;
 
 async function main() {
 
-    const users = await getTestUsers();
-  
+    const [deployer] = await ethers.getSigners();
+
     console.log(
       "Deploying contracts with the account:",
-      users.deployer.address
+      deployer.address
     );
 
     const feeValue = fee["kovan"];
     const keyHashValue = keyHash["kovan"];
     const vrfCoordinatorValue = vrfCoordinator["kovan"];
     const linkValue = link["kovan"];
-    
-    console.log("Account balance:", (await users.deployer.getBalance()).toString());
-      
+
+    console.log("Account balance:", (await deployer.getBalance()).toString());
+
     const token = await ethers.getContractFactory("VRF");
     const vrfContract = await token.deploy(
-      vrfCoordinatorValue, 
-      linkValue, 
+      vrfCoordinatorValue,
+      linkValue,
       keyHashValue,
       feeValue,
     );
     await vrfContract.deployed();
-  
+
     console.log("vrfContract address:", vrfContract.address);
-  }
-  
-  main()
-    .then(() => process.exit(0))
-    .catch(error => {
-      console.error(error);
-      process.exit(1);
-    });
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
