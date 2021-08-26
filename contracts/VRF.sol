@@ -93,14 +93,6 @@ contract VRF is VRFConsumerBase, Ownable {
         }
     }
 
-    function getCandidatesNumber() public view returns(uint32) {
-        return candidatesNumber;
-    }
-
-    function getWinnersNumber() public view returns(uint32) {
-        return winnersNumber;
-    }
-
     function getWinners() public view returns(address[] memory) {
         return winners;
     }
@@ -116,12 +108,9 @@ contract VRF is VRFConsumerBase, Ownable {
         return address(LINK);
     }
 
-    function getRequestFee() external view returns(uint256) {
-        return fee;
-    }
-
     /// @notice to avoid locking funds within the contract
     function withdrawLink() external onlyOwner {
         require(LINK.transfer(msg.sender, LINK.balanceOf(address(this))), "Unable to transfer funds out of contract");
     }
+
 }
