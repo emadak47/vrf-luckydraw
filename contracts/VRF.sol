@@ -13,13 +13,10 @@ contract VRF is VRFConsumerBase, Ownable {
     bytes32 public keyHash;
     uint256 public fee;
 
-    /// @dev expected number of candidates 
-    uint32 public candidatesNumber;
-
-    /// @dev number of winners 
+    /// @dev number of winners
     uint32 public winnersNumber;
 
-    /// @dev an array to contain 'candidatesNumber' addresses 
+    /// @dev an array to contain 'candidates' addresses
     address[] public candidates;
 
     /// @dev an array to be filled in with 'winnersNumber' addresses
@@ -41,23 +38,15 @@ contract VRF is VRFConsumerBase, Ownable {
         fee = _fee;
     }
 
-    function setWinnersNumber(uint32 _winnersNumber) public {
+    function setWinnersNumber(uint32 _winnersNumber) public onlyOwner {
         winnersNumber = _winnersNumber;
     }
 
-    /** 
-     * @notice instantiate the 'candidates' array and the mapping 'selected'
-     * @dev number of entries in _candidates must match the set number of candidates in 'candidatesNumber' 
-     */
     function setCandidatesInfo(address[] memory _candidates) public onlyOwner {
-        candidatesNumber = uint32(_candidates.length);
         candidates = _candidates;
-        for (uint i = 0; i < candidates.length; i++) {
-            selected[candidates[i]] = false;
-        }
     }
     
-    function requestRandomNumber() public {
+    function requestRandomNumber() public onlyOwner {
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK in contract");
         bytes32 vrfRequestID = requestRandomness(keyHash, fee);
         emit RandomNumberRequested(vrfRequestID);
@@ -72,24 +61,21 @@ contract VRF is VRFConsumerBase, Ownable {
      * @notice generate 2x expected number of winners. Only consider the first 'winnersNumber' who have not been selected
      * @dev getting multiple random numbers within a given range from a single VRF response
      */
-    function generateWinners(uint256 randomness) public {
-        uint counter = 0;
+    function generateWinners(uint256 randomness) private {
         uint width = SafeMath.mul(winnersNumber, 2);
 
         for (uint i = 0; i < width; i++) {
-            // range (0, candidatesNumber)
             uint256 randomNumber = SafeMath.mod(
                 uint256(keccak256(abi.encode(randomness, i))),
-                candidatesNumber
+                    candidates.length
             );
 
             if(!selected[candidates[randomNumber]]) {
                 selected[candidates[randomNumber]] = true;
                 winners.push(candidates[randomNumber]);
-                counter = SafeMath.add(counter, 1);
-            } 
+            }
 
-            if (counter == winnersNumber) break;
+            if (winners.length == winnersNumber) break;
         }
     }
 
